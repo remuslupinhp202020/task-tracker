@@ -8,16 +8,21 @@
 </head>
 <body>
 
-    <header>
-        <h1>Client Task Manager</h1>
+<header>
+        <div>
+            <h1>Client Task Manager</h1>
+            <!-- PASTE YOUR GOOGLE FORM LINK BELOW -->
+            <a href="YOUR_GOOGLE_FORM_LINK_HERE" target="_blank" class="btn-add">
+                + New Task
+            </a>
+        </div>
+        
         <div class="controls">
-            <!-- Filter Dropdown -->
             <select id="statusFilter">
                 <option value="Pending">Show Pending</option>
                 <option value="Complete">Show Complete</option>
                 <option value="All">Show All</option>
             </select>
-            <!-- Sort Button -->
             <button id="sortBtn">Sort by Priority</button>
         </div>
     </header>
