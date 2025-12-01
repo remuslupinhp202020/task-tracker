@@ -2,109 +2,87 @@
 const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT8lQIRVa06oc3fkWoTKpCyv2UBOR1LqRVBZ3rZU-FxmVhjBMJo-PD94jBZ-vFqvStMnvj3kwiENCIP/pub?gid=1627536188&single=true&output=csv';
 const API_URL = 'https://script.google.com/macros/s/AKfycbxG1lHfybhGaxgypG5fwryHj2LjfuQGVbeSnvrZeoO-I6K9D8YvFC6w3WNoiWtOt_E1/exec';
 
-// --- DIAGNOSTIC SCRIPT START ---
+// --- PASTE YOUR URLS HERE ---
+const CSV_URL = 'PASTE_YOUR_CSV_URL_HERE';
+const API_URL = 'PASTE_YOUR_WEB_APP_URL_HERE';
+
 let globalData = [];
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Create Debug Box
-    const debugBox = document.createElement('div');
-    debugBox.id = 'debug-console';
-    debugBox.style.cssText = "background: #fff3cd; color: #856404; padding: 15px; border: 2px solid #ffeeba; margin-bottom: 20px; font-family: monospace; white-space: pre-wrap;";
-    document.body.prepend(debugBox);
-
-    log("1. Starting App...");
     loadData();
-
+    
+    // Event Listeners
     document.getElementById('showComplete').addEventListener('change', renderBoard);
     document.getElementById('refreshBtn').addEventListener('click', loadData);
 });
 
-function log(msg) {
-    const box = document.getElementById('debug-console');
-    box.innerHTML += msg + "\n";
-    console.log(msg);
-}
-
 function loadData() {
-    log("2. Fetching CSV from Google...");
+    const container = document.querySelector('.board');
+    container.style.opacity = '0.5'; // Visual cue that it's loading
     
     fetch(CSV_URL)
-        .then(response => {
-            if (!response.ok) throw new Error("HTTP Error: " + response.status);
-            return response.text();
-        })
+        .then(response => response.text())
         .then(text => {
-            log(`3. CSV Downloaded. Length: ${text.length} characters.`);
-            
-            // Check if it's HTML (Wrong Link Error)
-            if(text.trim().startsWith("<!DOCTYPE html") || text.includes("<html")) {
-                log("❌ CRITICAL ERROR: The CSV Link is wrong.");
-                log("   You pasted the 'Web Page' link, not the 'CSV' link.");
-                log("   Go to File > Share > Publish to Web > Select 'CSV' > Republish.");
-                return;
-            }
-
             globalData = parseCSV(text);
-            
-            if (globalData.length === 0) {
-                log("⚠️ Warning: No rows found in CSV.");
-            } else {
-                const firstRow = globalData[0];
-                log(`4. Parsed ${globalData.length} rows.`);
-                log(`   First Row Keys: [${Object.keys(firstRow).join(', ')}]`);
-                log(`   First Row ID: "${firstRow.Unique_ID}"`);
-                
-                if (firstRow.Unique_ID === undefined) {
-                    log("❌ ERROR: 'Unique_ID' column not found.");
-                    log("   Check your Google Sheet Header (Row 1).");
-                    log("   It must be 'Unique_ID' (Check for spaces!).");
-                } else if (!firstRow.Unique_ID) {
-                    log("⚠️ Issue: The first row has an empty Unique_ID.");
-                    log("   Tasks without IDs are hidden. Type '1' in Col A of your sheet.");
-                } else {
-                    log("✅ Data looks good. Rendering board...");
-                }
-            }
-
             renderBoard();
+            container.style.opacity = '1';
         })
         .catch(err => {
-            log("❌ FETCH ERROR: " + err.message);
-            log("   Check if your CSV URL is correct and published.");
+            console.error(err);
+            alert("Error loading data. Please refresh.");
         });
 }
 
 function renderBoard() {
-    ['High', 'Medium', 'Low'].forEach(p => document.getElementById(`container-${p}`).innerHTML = '');
-    
+    // 1. Clear Columns
+    ['High', 'Medium', 'Low'].forEach(p => {
+        const col = document.getElementById(`container-${p}`);
+        if(col) col.innerHTML = '';
+    });
+
     const showComplete = document.getElementById('showComplete').checked;
-    
-    // Sort logic
+
+    // 2. Filter & Sort
     let displayData = globalData
         .filter(item => item.Unique_ID) 
-        .filter(item => showComplete ? true : item.Status !== 'Complete')
-        .sort((a, b) => (a.Date ? new Date(a.Date) : new Date('2099-01-01')) - (b.Date ? new Date(b.Date) : new Date('2099-01-01')));
+        .filter(item => showComplete ? true : item.Status !== 'Complete') 
+        .sort((a, b) => {
+            // Sort by Date (Earliest first)
+            const dateA = a.Date ? new Date(a.Date) : new Date('2099-01-01');
+            const dateB = b.Date ? new Date(b.Date) : new Date('2099-01-01');
+            return dateA - dateB;
+        });
 
-    log(`5. Rendering ${displayData.length} cards (Hidden: ${globalData.length - displayData.length}).`);
-
+    // 3. Distribute to Columns
     displayData.forEach(item => {
+        // Normalize Priority (Handle casing or missing values)
         let priority = item.Priority ? item.Priority.trim() : 'Low';
+        // Capitalize first letter (High, Medium, Low)
         priority = priority.charAt(0).toUpperCase() + priority.slice(1).toLowerCase();
+        
+        // Fallback if priority isn't standard
         if (!['High', 'Medium', 'Low'].includes(priority)) priority = 'Low';
         
         const card = createCard(item, priority);
-        document.getElementById(`container-${priority}`).appendChild(card);
+        const col = document.getElementById(`container-${priority}`);
+        if(col) col.appendChild(card);
     });
 }
 
 function createCard(item, priority) {
     const div = document.createElement('div');
     const isComplete = item.Status === 'Complete';
-    div.className = `card card-${isComplete ? 'Complete' : priority}`;
     
-    let dateStr = item.Date && !isNaN(Date.parse(item.Date)) 
-        ? new Date(item.Date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) 
-        : '';
+    div.className = `card card-${isComplete ? 'Complete' : priority}`;
+    div.setAttribute('data-id', item.Unique_ID);
+
+    // Date Format
+    let dateStr = item.Date;
+    if(dateStr && !isNaN(Date.parse(dateStr))) {
+        dateStr = new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    } else {
+        dateStr = '';
+    }
 
     div.innerHTML = `
         <div class="client">${item.Client || ''}</div>
@@ -120,39 +98,53 @@ function createCard(item, priority) {
 }
 
 function toggleStatus(id, newStatus, priority, btn) {
+    // 1. Optimistic UI Update (Instant Change)
+    const card = btn.closest('.card');
+    
+    // Update Local Data
     const item = globalData.find(x => x.Unique_ID == id);
     if(item) item.Status = newStatus;
+
+    // 2. Re-render immediately
     renderBoard(); 
+
+    // 3. Send to Backend
     fetch(API_URL, {
         method: 'POST', mode: 'no-cors',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ unique_id: id, status: newStatus })
-    });
+    }).catch(err => console.error("Sync Error:", err));
 }
 
+// --- ROBUST CSV PARSER ---
 function parseCSV(text) {
     const rows = [];
     let row = [];
     let currentCell = '';
     let inQuotes = false;
+    
     for (let i = 0; i < text.length; i++) {
         const char = text[i];
-        if (char === '"' && text[i+1] === '"') { currentCell += '"'; i++; }
-        else if (char === '"') { inQuotes = !inQuotes; }
-        else if (char === ',' && !inQuotes) { row.push(currentCell.trim()); currentCell = ''; }
-        else if ((char === '\r' || char === '\n') && !inQuotes) { 
-            if(currentCell || row.length > 0) { row.push(currentCell.trim()); rows.push(row); row = []; currentCell = ''; }
+        const nextChar = text[i + 1];
+
+        if (char === '"') {
+            if (inQuotes && nextChar === '"') { currentCell += '"'; i++; } 
+            else { inQuotes = !inQuotes; }
+        } else if (char === ',' && !inQuotes) {
+            row.push(currentCell.trim()); currentCell = '';
+        } else if ((char === '\r' || char === '\n') && !inQuotes) {
+            if (currentCell || row.length > 0) { row.push(currentCell.trim()); rows.push(row); row = []; currentCell = ''; }
         } else { currentCell += char; }
     }
     if (currentCell || row.length > 0) { row.push(currentCell.trim()); rows.push(row); }
-    
+
     const headers = rows[0].map(h => h.trim());
     return rows.slice(1).map(row => {
         let obj = {};
-        headers.forEach((h, i) => { 
-            let val = row[i];
+        headers.forEach((header, index) => {
+            let val = row[index];
             if(val && val.startsWith('"') && val.endsWith('"')) val = val.slice(1, -1);
-            obj[h] = val; 
+            obj[header] = val;
         });
         return obj;
     });
