@@ -1,53 +1,38 @@
-body { font-family: sans-serif; background: #f4f7f6; padding: 20px; }
-header { max-width: 1000px; margin: 0 auto 20px; display: flex; justify-content: space-between; align-items: center; }
-.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; max-width: 1000px; margin: 0 auto; }
+body { font-family: sans-serif; background: #eceff1; margin: 0; padding: 20px; height: 100vh; display: flex; flex-direction: column; box-sizing: border-box; }
 
-/* Card Style */
-.card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-top: 5px solid #ccc; }
-.card h3 { margin: 0 0 5px 0; font-size: 1.2rem; }
-.client { color: #666; font-size: 0.85rem; font-weight: bold; text-transform: uppercase; }
-.date { font-size: 0.85rem; color: #888; margin-bottom: 10px; display: block; }
-.notes { background: #fafafa; padding: 8px; font-size: 0.9rem; margin: 10px 0; border-radius: 4px; }
+header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.btn-add { background: #333; color: white; text-decoration: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; }
+.controls { display: flex; gap: 15px; align-items: center; }
+#refreshBtn { cursor: pointer; border: none; background: transparent; font-size: 1.2rem; }
 
-/* Status Colors */
-.card-High { border-top-color: #dc3545; }   /* Red */
-.card-Medium { border-top-color: #ffc107; } /* Yellow */
-.card-Low { border-top-color: #007bff; }    /* Blue */
-.card-Complete { border-top-color: #28a745; opacity: 0.6; } /* Green */
+/* KANBAN BOARD */
+.board { display: flex; gap: 20px; overflow-x: auto; height: 100%; align-items: flex-start; }
+.column { flex: 1; min-width: 300px; background: #dfe3e6; border-radius: 8px; display: flex; flex-direction: column; max-height: 100%; }
 
-/* Button */
-.btn-finish { width: 100%; padding: 8px; background: #28a745; color: white; border: none; cursor: pointer; border-radius: 4px; }
-.btn-finish:hover { background: #218838; }
-.loading { text-align: center; width: 100%; grid-column: 1 / -1; }
+/* Column Colors */
+.col-high { border-top: 5px solid #dc3545; }
+.col-medium { border-top: 5px solid #ffc107; }
+.col-low { border-top: 5px solid #007bff; }
 
-/* Add Task Button */
-.btn-add {
-    display: inline-block;
-    background-color: #333;
-    color: #fff;
-    text-decoration: none;
-    padding: 8px 15px;
-    border-radius: 4px;
-    font-weight: bold;
-    font-size: 0.9rem;
-    margin-top: 5px;
-}
-.btn-add:hover {
-    background-color: #555;
-}
+.col-header { padding: 15px; font-weight: bold; font-size: 1.1rem; color: #444; background: rgba(0,0,0,0.03); }
+.task-list { padding: 10px; overflow-y: auto; flex-grow: 1; }
 
-/* Update Header to handle the new button nicely */
-header {
-    flex-direction: column; 
-    align-items: flex-start;
-    gap: 15px;
-}
+/* CARD STYLES */
+.card { background: white; padding: 12px; margin-bottom: 10px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 4px solid transparent; transition: all 0.2s; }
+.card:hover { transform: translateY(-2px); }
 
-/* On bigger screens, put them side by side again */
-@media (min-width: 600px) {
-    header {
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-    }
-}
+/* Status Styles */
+.card-High { border-left-color: #dc3545; }
+.card-Medium { border-left-color: #ffc107; }
+.card-Low { border-left-color: #007bff; }
+.card-Complete { border-left-color: #28a745; background: #e8f5e9; opacity: 0.8; }
+.card-Complete h3 { text-decoration: line-through; color: #888; }
+
+.client { font-size: 0.75rem; font-weight: bold; color: #666; text-transform: uppercase; }
+h3 { margin: 5px 0; font-size: 1rem; color: #222; }
+.date { font-size: 0.8rem; color: #d32f2f; font-weight: bold; display: block; margin-bottom: 5px; }
+.notes { font-size: 0.85rem; color: #555; background: #f9f9f9; padding: 5px; margin: 8px 0; border-radius: 4px; }
+
+button { width: 100%; padding: 6px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem; margin-top: 5px; }
+.btn-finish { background: #28a745; color: white; }
+.btn-undo { background: #777; color: white; }
