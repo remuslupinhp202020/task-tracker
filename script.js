@@ -1,6 +1,6 @@
 // --- PASTE YOUR URLS HERE ---
 const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT8lQIRVa06oc3fkWoTKpCyv2UBOR1LqRVBZ3rZU-FxmVhjBMJo-PD94jBZ-vFqvStMnvj3kwiENCIP/pub?gid=1627536188&single=true&output=csv';
-const API_URL = 'https://script.google.com/macros/s/AKfycbz2ES8uZDpj3YuMs6JU5KOPlczjytZ-1Uur3O344wc6ZrbjOJkOLNR9pDF16-0IPMVk/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbxG1lHfybhGaxgypG5fwryHj2LjfuQGVbeSnvrZeoO-I6K9D8YvFC6w3WNoiWtOt_E1/exec';
 
 let globalData = [];
 
