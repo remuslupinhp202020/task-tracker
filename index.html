@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Task Manager</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <h1>Client Task Manager</h1>
+        <div class="controls">
+            <!-- Filter Dropdown -->
+            <select id="statusFilter">
+                <option value="Pending">Show Pending</option>
+                <option value="Complete">Show Complete</option>
+                <option value="All">Show All</option>
+            </select>
+            <!-- Sort Button -->
+            <button id="sortBtn">Sort by Priority</button>
+        </div>
+    </header>
+
+    <!-- This is where the tasks will appear -->
+    <div id="cardContainer" class="card-grid">
+        <p class="loading">Loading tasks...</p>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
