@@ -24,6 +24,18 @@ function loadData() {
             container.style.opacity = '1';
         })
         .catch(err => alert("Error loading data. Check CSV URL."));
+        .then(text => {
+                globalData = parseCSV(text);
+                
+                // --- ADD THESE 2 DEBUG LINES ---
+                console.log("Raw Data:", globalData);
+                alert(`Found ${globalData.length} rows. First row ID: "${globalData[0]?.Unique_ID}"`);
+                // -------------------------------
+    
+                renderBoard();
+                container.style.opacity = '1';
+            })
+    
 }
 
 function renderBoard() {
