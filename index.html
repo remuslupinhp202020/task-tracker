@@ -3,33 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Client Task Manager</title>
+    <title>Task Board</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<header>
+    <header>
         <div>
-            <h1>Client Task Manager</h1>
-            <!-- PASTE YOUR GOOGLE FORM LINK BELOW -->
-            <a href="https://docs.google.com/forms/d/e/1FAIpQLSftGjXPmzzInVKcKDKV9LtkA2BYNwldOeZbujxeidR5XGDlkw/viewform?usp=sharing&ouid=114728699733237187797" class="btn-add">
-                + New Task
-            </a>
+            <h1>Task Board</h1>
+            <!-- REPLACE WITH YOUR FORM LINK -->
+            <a href="YOUR_GOOGLE_FORM_LINK_HERE" target="_blank" class="btn-add">+ New Task</a>
         </div>
-        
         <div class="controls">
-            <select id="statusFilter">
-                <option value="Pending">Show Pending</option>
-                <option value="Complete">Show Complete</option>
-                <option value="All">Show All</option>
-            </select>
-            <button id="sortBtn">Sort by Priority</button>
+            <label><input type="checkbox" id="showComplete"> Show Completed</label>
+            <button id="refreshBtn">↻ Refresh</button>
         </div>
     </header>
 
-    <!-- This is where the tasks will appear -->
-    <div id="cardContainer" class="card-grid">
-        <p class="loading">Loading tasks...</p>
+    <div class="board">
+        <!-- High Priority Column -->
+        <div class="column col-high">
+            <div class="col-header">High Priority</div>
+            <div id="container-High" class="task-list"></div>
+        </div>
+
+        <!-- Medium Priority Column -->
+        <div class="column col-medium">
+            <div class="col-header">Medium Priority</div>
+            <div id="container-Medium" class="task-list"></div>
+        </div>
+
+        <!-- Low Priority Column -->
+        <div class="column col-low">
+            <div class="col-header">Low Priority</div>
+            <div id="container-Low" class="task-list"></div>
+        </div>
     </div>
 
     <script src="script.js"></script>
