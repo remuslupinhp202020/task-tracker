@@ -8,6 +8,7 @@ let globalData = [];
 document.addEventListener('DOMContentLoaded', () => {
     loadData();
     
+    // Event Listeners
     document.getElementById('showComplete').addEventListener('change', renderBoard);
     document.getElementById('refreshBtn').addEventListener('click', loadData);
 });
@@ -20,38 +21,34 @@ function loadData() {
         .then(response => response.text())
         .then(text => {
             globalData = parseCSV(text);
+            
+            // Debugging: Check console if data is still empty
+            console.log("Loaded Data:", globalData); 
+            
             renderBoard();
             container.style.opacity = '1';
         })
-        .catch(err => alert("Error loading data. Check CSV URL."));
-        .then(text => {
-                globalData = parseCSV(text);
-                
-                // --- ADD THESE 2 DEBUG LINES ---
-                console.log("Raw Data:", globalData);
-                alert(`Found ${globalData.length} rows. First row ID: "${globalData[0]?.Unique_ID}"`);
-                // -------------------------------
-    
-                renderBoard();
-                container.style.opacity = '1';
-            })
-    
+        .catch(err => {
+            console.error(err);
+            alert("Error loading data. Check console for details.");
+        });
 }
 
 function renderBoard() {
     // 1. Clear Columns
     ['High', 'Medium', 'Low'].forEach(p => {
-        document.getElementById(`container-${p}`).innerHTML = '';
+        const col = document.getElementById(`container-${p}`);
+        if(col) col.innerHTML = '';
     });
 
     const showComplete = document.getElementById('showComplete').checked;
 
-    // 2. Filter & Sort by Date
+    // 2. Filter & Sort
     let displayData = globalData
         .filter(item => item.Unique_ID) // Remove empty rows
-        .filter(item => showComplete ? true : item.Status !== 'Complete') // Filter Completed
+        .filter(item => showComplete ? true : item.Status !== 'Complete') // Hide Completed unless checked
         .sort((a, b) => {
-            // Sort by Date (Earliest first). Handle empty dates.
+            // Sort by Date (Earliest first). Empty dates go to the end.
             const dateA = a.Date ? new Date(a.Date) : new Date('2099-01-01');
             const dateB = b.Date ? new Date(b.Date) : new Date('2099-01-01');
             return dateA - dateB;
@@ -59,19 +56,25 @@ function renderBoard() {
 
     // 3. Distribute to Columns
     displayData.forEach(item => {
-        // Fallback: If priority is missing or weird, put in Low
-        let priority = ['High', 'Medium', 'Low'].includes(item.Priority) ? item.Priority : 'Low';
+        // Normalize Priority (Handle casing or missing values)
+        let priority = item.Priority ? item.Priority.trim() : 'Low';
+        // Capitalize first letter (High, Medium, Low)
+        priority = priority.charAt(0).toUpperCase() + priority.slice(1).toLowerCase();
         
-        const card = createCard(item);
-        document.getElementById(`container-${priority}`).appendChild(card);
+        // Fallback if priority isn't standard
+        if (!['High', 'Medium', 'Low'].includes(priority)) priority = 'Low';
+        
+        const card = createCard(item, priority);
+        const col = document.getElementById(`container-${priority}`);
+        if(col) col.appendChild(card);
     });
 }
 
-function createCard(item) {
+function createCard(item, priority) {
     const div = document.createElement('div');
     const isComplete = item.Status === 'Complete';
     
-    div.className = `card card-${isComplete ? 'Complete' : item.Priority}`;
+    div.className = `card card-${isComplete ? 'Complete' : priority}`;
     div.setAttribute('data-id', item.Unique_ID);
 
     // Date Format
@@ -83,50 +86,51 @@ function createCard(item) {
     }
 
     div.innerHTML = `
-        <div class="client">${item.Client || 'No Client'}</div>
+        <div class="client">${item.Client || ''}</div>
         <h3>${item.Task}</h3>
         ${dateStr ? `<span class="date">📅 ${dateStr}</span>` : ''}
         ${item.Notes ? `<div class="notes">${item.Notes}</div>` : ''}
         ${isComplete 
-            ? `<button class="btn-undo" onclick="toggleStatus(${item.Unique_ID}, 'Pending', '${item.Priority}', this)">↩ Undo</button>`
-            : `<button class="btn-finish" onclick="toggleStatus(${item.Unique_ID}, 'Complete', '${item.Priority}', this)">✔ Finish</button>`
+            ? `<button class="btn-undo" onclick="toggleStatus(${item.Unique_ID}, 'Pending', '${priority}', this)">↩ Undo</button>`
+            : `<button class="btn-finish" onclick="toggleStatus(${item.Unique_ID}, 'Complete', '${priority}', this)">✔ Finish</button>`
         }
     `;
     return div;
 }
 
 function toggleStatus(id, newStatus, priority, btn) {
-    // Optimistic UI Update
+    // 1. Optimistic UI Update (Instant Change)
     const card = btn.closest('.card');
     
     // Update Local Data
     const item = globalData.find(x => x.Unique_ID == id);
     if(item) item.Status = newStatus;
 
-    // Re-render immediately to move/color the card correctly
+    // 2. Re-render immediately so the card moves to the right spot/color
     renderBoard(); 
 
-    // Send to Backend
+    // 3. Send to Backend
     fetch(API_URL, {
         method: 'POST', mode: 'no-cors',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ unique_id: id, status: newStatus })
-    });
+    }).catch(err => console.error("Sync Error:", err));
 }
 
-// --- ROBUST CSV PARSER (Fixes the comma bug) ---
+// --- ROBUST CSV PARSER ---
 function parseCSV(text) {
     const rows = [];
     let row = [];
     let currentCell = '';
     let inQuotes = false;
     
+    // 1. Parse text into rows/cells
     for (let i = 0; i < text.length; i++) {
         const char = text[i];
         const nextChar = text[i + 1];
 
         if (char === '"') {
-            if (inQuotes && nextChar === '"') { currentCell += '"'; i++; } // Escaped quote
+            if (inQuotes && nextChar === '"') { currentCell += '"'; i++; } 
             else { inQuotes = !inQuotes; }
         } else if (char === ',' && !inQuotes) {
             row.push(currentCell.trim()); currentCell = '';
@@ -136,12 +140,15 @@ function parseCSV(text) {
     }
     if (currentCell || row.length > 0) { row.push(currentCell.trim()); rows.push(row); }
 
-    const headers = rows[0];
+    // 2. Map Headers to Objects
+    // Fix: We trim() headers to ensure "Unique_ID " becomes "Unique_ID"
+    const headers = rows[0].map(h => h.trim());
+    
     return rows.slice(1).map(row => {
         let obj = {};
         headers.forEach((header, index) => {
-            // Remove quotes if present
             let val = row[index];
+            // Remove surrounding quotes from values if present
             if(val && val.startsWith('"') && val.endsWith('"')) val = val.slice(1, -1);
             obj[header] = val;
         });
