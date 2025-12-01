@@ -19,3 +19,35 @@ header { max-width: 1000px; margin: 0 auto 20px; display: flex; justify-content:
 .btn-finish { width: 100%; padding: 8px; background: #28a745; color: white; border: none; cursor: pointer; border-radius: 4px; }
 .btn-finish:hover { background: #218838; }
 .loading { text-align: center; width: 100%; grid-column: 1 / -1; }
+
+/* Add Task Button */
+.btn-add {
+    display: inline-block;
+    background-color: #333;
+    color: #fff;
+    text-decoration: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 0.9rem;
+    margin-top: 5px;
+}
+.btn-add:hover {
+    background-color: #555;
+}
+
+/* Update Header to handle the new button nicely */
+header {
+    flex-direction: column; 
+    align-items: flex-start;
+    gap: 15px;
+}
+
+/* On bigger screens, put them side by side again */
+@media (min-width: 600px) {
+    header {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+}
